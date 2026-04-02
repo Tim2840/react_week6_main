@@ -21,7 +21,6 @@ function App() {
   };
 
   useEffect(() => {
-    // setIsAuthLoading(true); 已移除
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("hexToken="))
@@ -30,8 +29,6 @@ function App() {
     if (token) {
       axios.defaults.headers.common["Authorization"] = token;
       checkLogin();
-    } else {
-      // setIsAuthLoading(false); 已移除
     }
   }, []);
 

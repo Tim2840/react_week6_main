@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import PropTypes from "prop-types";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { Sparkles, Mail, Lock, LogIn } from "lucide-react";
 
@@ -10,26 +11,27 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 function LoginPage({ isAuth, setIsAuth, getData }) {
   const navigate = useNavigate();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+    mode: "onTouched",
+  });
+
   useEffect(() => {
     if (isAuth) {
       navigate("/admin");
     }
   }, [isAuth, navigate]);
 
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const onSubmit = async (e) => {
+  const onSubmit = async (data) => {
     try {
-      e.preventDefault();
-      const response = await axios.post(`${API_BASE}/admin/signin`, formData);
+      const response = await axios.post(`${API_BASE}/admin/signin`, data);
       const { token, expired } = response.data;
 
       document.cookie = `hexToken=${token};expires=${new Date(expired)}`;
@@ -38,7 +40,6 @@ function LoginPage({ isAuth, setIsAuth, getData }) {
       setIsAuth(true);
       navigate("/admin");
 
-      // If parent passed getData (fetchProducts), call it. But usually AdminLayout does this on mount.
       if (getData) getData();
 
       Swal.fire({
@@ -51,7 +52,7 @@ function LoginPage({ isAuth, setIsAuth, getData }) {
       Swal.fire({
         icon: "error",
         title: "登入失敗",
-        text: `請重新輸入帳號密碼!${error}`,
+        text: error.response?.data?.message || "請重新輸入帳號密碼!",
       });
     }
   };
@@ -68,38 +69,66 @@ function LoginPage({ isAuth, setIsAuth, getData }) {
           </Link>
           <p>請輸入你的帳號密碼</p>
         </header>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="form-floating mb-3">
             <input
               type="email"
-              className="form-control"
+              className={`form-control ${errors.username ? "is-invalid" : ""}`}
               id="username"
-              name="username"
               placeholder="name@example.com"
-              value={formData.username}
-              onChange={handleInputChange}
+              {...register("username", {
+                required: "請輸入帳號 (Email)",
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                  message: "Email 格式不正確",
+                },
+              })}
             />
             <label htmlFor="username">Email address</label>
             <Mail className="input-icon" size={20} />
+            {errors.username && (
+              <div className="invalid-feedback text-start">
+                {errors.username.message}
+              </div>
+            )}
           </div>
           <div className="form-floating">
             <input
               type="password"
-              className="form-control"
+              className={`form-control ${errors.password ? "is-invalid" : ""}`}
               id="password"
-              name="password"
               placeholder="Password"
-              value={formData.password}
-              onChange={handleInputChange}
+              {...register("password", {
+                required: "請輸入密碼",
+              })}
             />
             <label htmlFor="password">Password</label>
             <Lock className="input-icon" size={20} />
+            {errors.password && (
+              <div className="invalid-feedback text-start">
+                {errors.password.message}
+              </div>
+            )}
           </div>
           <button
             type="submit"
             className="btn btn-primary w-100 mt-4 d-flex align-items-center justify-content-center"
+            disabled={isSubmitting}
           >
-            <LogIn size={20} className="me-2" /> 登入
+            {isSubmitting ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                登入中...
+              </>
+            ) : (
+              <>
+                <LogIn size={20} className="me-2" /> 登入
+              </>
+            )}
           </button>
         </form>
       </section>
@@ -110,7 +139,7 @@ function LoginPage({ isAuth, setIsAuth, getData }) {
 LoginPage.propTypes = {
   isAuth: PropTypes.bool,
   setIsAuth: PropTypes.func.isRequired,
-  getData: PropTypes.func, // getData is optional here as it's conditionally called
+  getData: PropTypes.func,
 };
 
 export default LoginPage;
