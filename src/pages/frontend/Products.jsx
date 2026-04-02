@@ -10,6 +10,26 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [cartLoading, setCartLoading] = useState({});
+
+  const addToCart = async (productId) => {
+    setCartLoading((prev) => ({ ...prev, [productId]: true }));
+    try {
+      await axios.post(`${API_BASE}/api/${API_PATH}/cart`, {
+        data: {
+          product_id: productId,
+          qty: 1,
+        },
+      });
+      // 可以考慮跳通知
+    } catch (error) {
+      console.error("加入購物車失敗", error);
+      alert("加入購物車失敗");
+    } finally {
+      setCartLoading((prev) => ({ ...prev, [productId]: false }));
+    }
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -34,33 +54,54 @@ const Products = () => {
         ) : (
           products.map((product) => (
             <div className="col" key={product.id}>
-              <div className="card h-100 shadow-sm border-0">
+              <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
                 <img
                   src={product.imageUrl}
                   className="card-img-top object-fit-cover"
                   style={{ height: "200px" }}
                   alt={product.title}
                 />
-                <div className="card-body">
-                  <h5 className="card-title fw-bold text-dark">
-                    {product.title}
-                  </h5>
+                <div className="card-body p-4">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <h5 className="card-title fw-bold text-dark mb-0">
+                      {product.title}
+                    </h5>
+                    <span className="badge bg-light text-primary rounded-pill border">
+                      {product.category}
+                    </span>
+                  </div>
                   <p
-                    className="card-text text-muted mb-3 text-truncate-2"
+                    className="card-text text-muted mb-4 text-truncate-2 small"
                     style={{ height: "3em" }}
                   >
                     {product.description}
                   </p>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span className="h5 text-primary mb-0">
+                  <div className="d-flex justify-content-between align-items-center mt-auto">
+                    <span className="h5 text-primary mb-0 fw-bold">
                       NT$ {product.price}
                     </span>
-                    <Link
-                      to={`/product/${product.id}`}
-                      className="btn btn-outline-primary btn-sm rounded-pill px-3"
-                    >
-                      查看細節
-                    </Link>
+                    <div className="d-flex gap-2">
+                      <Link
+                        to={`/product/${product.id}`}
+                        className="btn btn-outline-secondary btn-sm rounded-pill px-3"
+                      >
+                        細節
+                      </Link>
+                      <button
+                        className="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center"
+                        onClick={() => addToCart(product.id)}
+                        disabled={cartLoading[product.id]}
+                      >
+                        {cartLoading[product.id] ? (
+                          <span
+                            className="spinner-border spinner-border-sm"
+                            role="status"
+                          ></span>
+                        ) : (
+                          "加入購物車"
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

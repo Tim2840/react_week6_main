@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useForm } from "react-hook-form";
+import Swal from "sweetalert2";
 import { CartSkeleton } from "../../components/common/Skeleton";
+import FullPageLoading from "../../components/common/FullPageLoading";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -10,6 +13,22 @@ const Cart = () => {
     carts: [],
   });
   const [isFullLoading, setIsFullLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      tel: "",
+      address: "",
+      message: "",
+    },
+    mode: "onTouched",
+  });
 
   // 取得購物車資料 (範例：幫你寫好了！)
   const getCart = async () => {
@@ -29,26 +48,78 @@ const Cart = () => {
   // 提示：API 網址為 `${API_BASE}/api/${API_PATH}/cart/${cart_id}`
   // 需要傳送 data 物件，格式為 { data: { product_id, qty } }
   const updateCartItem = async (item, qty) => {
-    // [你的任務]：
-    // 1. 開啟 Loading 狀態
-    // 2. 使用 axios.put 發送請求
-    // 3. 成功後呼叫 getCart() 重新刷新 UI
-    // 4. 關閉 Loading 狀態
-    console.log("正在嘗試更新...", item.id, qty);
+    setIsFullLoading(true);
+    try {
+      await axios.put(`${API_BASE}/api/${API_PATH}/cart/${item.id}`, {
+        data: {
+          product_id: item.product_id,
+          qty,
+        },
+      });
+      getCart();
+    } catch (error) {
+      console.error(error);
+      alert("更新購物車失敗");
+      setIsFullLoading(false);
+    }
   };
 
-  // TODO: 刪除單一購物車項目
-  // 提示：API 網址為 `${API_BASE}/api/${API_PATH}/cart/${cart_id}`
   const removeCartItem = async (id) => {
-    // [你的任務]：使用 axios.delete 並在成功後呼叫 getCart() 刷新購物車
-    console.log("預計刪除項目的 ID:", id);
+    setIsFullLoading(true);
+    try {
+      await axios.delete(`${API_BASE}/api/${API_PATH}/cart/${id}`);
+      getCart();
+    } catch (error) {
+      console.error(error);
+      alert("刪除品項失敗");
+      setIsFullLoading(false);
+    }
   };
 
-  // TODO: 清空購物車
-  // 提示：API 網址為 `${API_BASE}/api/${API_PATH}/cart/all`
   const removeAllCart = async () => {
-    // [你的任務]：使用 axios.delete 並在成功後呼叫 getCart() 刷新購物車
-    console.log("預計清空整個購物車");
+    setIsFullLoading(true);
+    try {
+      await axios.delete(`${API_BASE}/api/${API_PATH}/cart/all`);
+      getCart();
+    } catch (error) {
+      console.error(error);
+      alert("清空購物車失敗");
+      setIsFullLoading(false);
+    }
+  };
+
+  const onSubmit = async (data) => {
+    const { message, ...user } = data;
+    const orderData = {
+      data: {
+        user,
+        message,
+      },
+    };
+
+    setIsFullLoading(true);
+    try {
+      const res = await axios.post(
+        `${API_BASE}/api/${API_PATH}/order`,
+        orderData,
+      );
+      Swal.fire({
+        icon: "success",
+        title: "訂單送出成功",
+        text: `訂單 ID: ${res.data.orderId}`,
+      });
+      reset();
+      getCart();
+    } catch (error) {
+      console.error("送出訂單失敗", error);
+      Swal.fire({
+        icon: "error",
+        title: "訂單送出失敗",
+        text: error.response?.data?.message || "請稍後再試",
+      });
+    } finally {
+      setIsFullLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -170,10 +241,148 @@ const Cart = () => {
               </div>
 
               {/* TODO: 這裡可以預留一個結帳表單的入口或是直接寫表單 */}
-              <div className="bg-light p-3 rounded-3 mb-4">
-                <p className="small text-muted mb-0">
-                  💡 提示：下一步可以嘗試實作顧客資訊表單與驗證！
-                </p>
+              {/* 結帳表單 */}
+              <div className="mt-5">
+                <div className="d-flex align-items-center mb-4">
+                  <div
+                    className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style={{ width: "32px", height: "32px" }}
+                  >
+                    <span className="text-white fw-bold small">1</span>
+                  </div>
+                  <h4 className="fw-bold mb-0">收件人資訊</h4>
+                </div>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="row g-3">
+                  <div className="col-md-6 text-start">
+                    <label htmlFor="email" className="form-label small fw-bold">
+                      Email <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      className={`form-control border-0 bg-light rounded-3 ${
+                        errors.email ? "is-invalid" : ""
+                      }`}
+                      placeholder="請輸入 Email"
+                      {...register("email", {
+                        required: "Email 為必填",
+                        pattern: {
+                          value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                          message: "Email 格式不正確",
+                        },
+                      })}
+                    />
+                    {errors.email && (
+                      <div className="invalid-feedback">
+                        {errors.email.message}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-6 text-start">
+                    <label htmlFor="name" className="form-label small fw-bold">
+                      收件人姓名 <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      className={`form-control border-0 bg-light rounded-3 ${
+                        errors.name ? "is-invalid" : ""
+                      }`}
+                      placeholder="請輸入姓名"
+                      {...register("name", { required: "姓名為必填" })}
+                    />
+                    {errors.name && (
+                      <div className="invalid-feedback">
+                        {errors.name.message}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-12 text-start">
+                    <label htmlFor="tel" className="form-label small fw-bold">
+                      收件人電話 <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      id="tel"
+                      type="tel"
+                      className={`form-control border-0 bg-light rounded-3 ${
+                        errors.tel ? "is-invalid" : ""
+                      }`}
+                      placeholder="請輸入電話"
+                      {...register("tel", {
+                        required: "電話為必填",
+                        minLength: { value: 8, message: "電話最少 8 碼" },
+                        pattern: {
+                          value: /^(09)[0-9]{8}$|^0[0-9]{1,2}[0-9]{6,8}$/,
+                          message: "請輸入有效的電話格式",
+                        },
+                      })}
+                    />
+                    {errors.tel && (
+                      <div className="invalid-feedback">{errors.tel.message}</div>
+                    )}
+                  </div>
+
+                  <div className="col-md-12 text-start">
+                    <label htmlFor="address" className="form-label small fw-bold">
+                      收件地地址 <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      id="address"
+                      type="text"
+                      className={`form-control border-0 bg-light rounded-3 ${
+                        errors.address ? "is-invalid" : ""
+                      }`}
+                      placeholder="請輸入地址"
+                      {...register("address", { required: "地址為必填" })}
+                    />
+                    {errors.address && (
+                      <div className="invalid-feedback">
+                        {errors.address.message}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-12 text-start">
+                    <label htmlFor="message" className="form-label small fw-bold">
+                      留言
+                    </label>
+                    <textarea
+                      id="message"
+                      className="form-control border-0 bg-light rounded-3"
+                      rows="3"
+                      placeholder="有什麼想對我們說的嗎？"
+                      {...register("message")}
+                    ></textarea>
+                  </div>
+
+                  <div className="col-12 mt-4">
+                    <button
+                      type="submit"
+                      className="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center"
+                      disabled={isFullLoading || isSubmitting || cartData.carts.length === 0}
+                    >
+                      {isSubmitting || isFullLoading ? (
+                        <>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                          ></span>
+                          處理中...
+                        </>
+                      ) : (
+                        "確認送出訂單"
+                      )}
+                    </button>
+                    {cartData.carts.length === 0 && (
+                      <p className="text-danger small mt-2 mb-0 text-center">
+                        購物車內尚無品項，無法送出訂單
+                      </p>
+                    )}
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -187,7 +396,8 @@ const Cart = () => {
         </div>
       )}
 
-      {/* Loading Overlay 已移除，改用 Skeleton 提供更佳體驗 */}
+      {/* Loading Overlay */}
+      <FullPageLoading isLoading={isFullLoading} />
     </div>
   );
 };
