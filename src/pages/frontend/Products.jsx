@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { ProductListSkeleton } from "../../components/common/Skeleton";
+import { ShoppingCart } from "lucide-react";
+import Swal from "sweetalert2";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -21,10 +23,23 @@ const Products = () => {
           qty: 1,
         },
       });
-      // 可以考慮跳通知
+      Swal.fire({
+        title: "已加入購物車",
+        text: `商品已成功加入`,
+        icon: "success",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
     } catch (error) {
       console.error("加入購物車失敗", error);
-      alert("加入購物車失敗");
+      Swal.fire({
+        title: "加入失敗",
+        text: error.response?.data?.message || "請稍後再試",
+        icon: "error",
+      });
     } finally {
       setCartLoading((prev) => ({ ...prev, [productId]: false }));
     }
@@ -46,62 +61,68 @@ const Products = () => {
   }, []);
 
   return (
-    <div className="container mt-5">
-      <h1 className="mb-4">產品列表</h1>
-      <div className="row row-cols-1 row-cols-md-3 g-4">
+    <div className="product-list container mt-5">
+      <div className="text-center mb-5 mt-4">
+        <h1 className="fw-black mb-2 text-dark">精選亮點</h1>
+        <div className="title-bar"></div>
+        <p className="text-muted">為您挑選充滿溫度的手作禮物</p>
+      </div>
+
+      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {isLoading ? (
           <ProductListSkeleton />
         ) : (
           products.map((product) => (
             <div className="col" key={product.id}>
-              <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
-                <img
-                  src={product.imageUrl}
-                  className="card-img-top object-fit-cover"
-                  style={{ height: "200px" }}
-                  alt={product.title}
-                />
-                <div className="card-body p-4">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <h5 className="card-title fw-bold text-dark mb-0">
+              <div className="product-card card h-100 shadow-sm border-0">
+                <div className="card-img-container">
+                  <Link to={`/product/${product.id}`}>
+                    <img
+                      src={product.imageUrl}
+                      className="card-img-top"
+                      alt={product.title}
+                    />
+                  </Link>
+                  <span className="category-badge">{product.category}</span>
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="btn-overlay text-decoration-none text-center"
+                  >
+                    查看細節
+                  </Link>
+                </div>
+                <div className="card-body">
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="text-decoration-none"
+                  >
+                    <h5 className="product-title" title={product.title}>
                       {product.title}
                     </h5>
-                    <span className="badge bg-light text-primary rounded-pill border">
-                      {product.category}
-                    </span>
-                  </div>
-                  <p
-                    className="card-text text-muted mb-4 text-truncate-2 small"
-                    style={{ height: "3em" }}
-                  >
-                    {product.description}
-                  </p>
-                  <div className="d-flex justify-content-between align-items-center mt-auto">
-                    <span className="h5 text-primary mb-0 fw-bold">
-                      NT$ {product.price}
-                    </span>
-                    <div className="d-flex gap-2">
-                      <Link
-                        to={`/product/${product.id}`}
-                        className="btn btn-outline-secondary btn-sm rounded-pill px-3"
-                      >
-                        細節
-                      </Link>
-                      <button
-                        className="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center"
-                        onClick={() => addToCart(product.id)}
-                        disabled={cartLoading[product.id]}
-                      >
-                        {cartLoading[product.id] ? (
-                          <span
-                            className="spinner-border spinner-border-sm"
-                            role="status"
-                          ></span>
-                        ) : (
-                          "加入購物車"
-                        )}
-                      </button>
+                  </Link>
+                  <p className="product-description">{product.description}</p>
+                  <div className="product-footer">
+                    <div className="price-tag">
+                      <span className="currency">NT$</span>
+                      <span className="amount">
+                        {product.price.toLocaleString()}
+                      </span>
                     </div>
+                    <button
+                      className="btn-add-cart"
+                      onClick={() => addToCart(product.id)}
+                      disabled={cartLoading[product.id]}
+                      title="加入購物車"
+                    >
+                      {cartLoading[product.id] ? (
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                        ></span>
+                      ) : (
+                        <ShoppingCart size={22} />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

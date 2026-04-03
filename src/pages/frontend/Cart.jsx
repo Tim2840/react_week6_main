@@ -3,7 +3,6 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { CartSkeleton } from "../../components/common/Skeleton";
-import FullPageLoading from "../../components/common/FullPageLoading";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -12,7 +11,8 @@ const Cart = () => {
   const [cartData, setCartData] = useState({
     carts: [],
   });
-  const [isFullLoading, setIsFullLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [itemLoadingMap, setItemLoadingMap] = useState({});
 
   const {
     register,
@@ -30,25 +30,25 @@ const Cart = () => {
     mode: "onTouched",
   });
 
-  // 取得購物車資料 (範例：幫你寫好了！)
   const getCart = async () => {
-    setIsFullLoading(true);
+    setIsPageLoading(true);
     try {
       const res = await axios.get(`${API_BASE}/api/${API_PATH}/cart`);
       setCartData(res.data.data);
     } catch (error) {
       console.error(error);
-      alert("取得購物車失敗");
+      Swal.fire({
+        icon: "error",
+        title: "取得購物車失敗",
+        text: "請稍後再試",
+      });
     } finally {
-      setIsFullLoading(false);
+      setIsPageLoading(false);
     }
   };
 
-  // TODO: 更新購物車品項數量
-  // 提示：API 網址為 `${API_BASE}/api/${API_PATH}/cart/${cart_id}`
-  // 需要傳送 data 物件，格式為 { data: { product_id, qty } }
   const updateCartItem = async (item, qty) => {
-    setIsFullLoading(true);
+    setItemLoadingMap((prev) => ({ ...prev, [item.id]: true }));
     try {
       await axios.put(`${API_BASE}/api/${API_PATH}/cart/${item.id}`, {
         data: {
@@ -59,32 +59,36 @@ const Cart = () => {
       getCart();
     } catch (error) {
       console.error(error);
-      alert("更新購物車失敗");
-      setIsFullLoading(false);
+      Swal.fire({ icon: "error", title: "更新數量失敗" });
+    } finally {
+      setItemLoadingMap((prev) => ({ ...prev, [item.id]: false }));
     }
   };
 
   const removeCartItem = async (id) => {
-    setIsFullLoading(true);
+    setItemLoadingMap((prev) => ({ ...prev, [id]: true }));
     try {
       await axios.delete(`${API_BASE}/api/${API_PATH}/cart/${id}`);
       getCart();
     } catch (error) {
       console.error(error);
-      alert("刪除品項失敗");
-      setIsFullLoading(false);
+      Swal.fire({ icon: "error", title: "刪除品項失敗" });
+    } finally {
+      setItemLoadingMap((prev) => ({ ...prev, [id]: false }));
     }
   };
 
   const removeAllCart = async () => {
-    setIsFullLoading(true);
+    setIsPageLoading(true);
     try {
       await axios.delete(`${API_BASE}/api/${API_PATH}/cart/all`);
       getCart();
+      Swal.fire({ icon: "success", title: "已清空購物車", toast: true, position: "top-end", timer: 1500, showConfirmButton: false });
     } catch (error) {
       console.error(error);
-      alert("清空購物車失敗");
-      setIsFullLoading(false);
+      Swal.fire({ icon: "error", title: "清空失敗" });
+    } finally {
+      setIsPageLoading(false);
     }
   };
 
@@ -97,7 +101,6 @@ const Cart = () => {
       },
     };
 
-    setIsFullLoading(true);
     try {
       const res = await axios.post(
         `${API_BASE}/api/${API_PATH}/order`,
@@ -117,8 +120,6 @@ const Cart = () => {
         title: "訂單送出失敗",
         text: error.response?.data?.message || "請稍後再試",
       });
-    } finally {
-      setIsFullLoading(false);
     }
   };
 
@@ -135,13 +136,14 @@ const Cart = () => {
             className="btn btn-outline-danger btn-sm"
             type="button"
             onClick={removeAllCart}
+            disabled={isPageLoading || Object.values(itemLoadingMap).some(v => v)}
           >
             清空購物車
           </button>
         )}
       </div>
 
-      {isFullLoading && cartData.carts.length === 0 ? (
+      {isPageLoading && cartData.carts.length === 0 ? (
         <CartSkeleton />
       ) : cartData.carts.length > 0 ? (
         <div className="row">
@@ -151,7 +153,7 @@ const Cart = () => {
                 <thead className="bg-light">
                   <tr>
                     <th>品項</th>
-                    <th style={{ width: "150px" }}>數量</th>
+                    <th style={{ width: "120px" }}>數量</th>
                     <th className="text-end">單價</th>
                     <th className="text-end">小計</th>
                     <th className="text-center">操作</th>
@@ -169,37 +171,28 @@ const Cart = () => {
                             style={{ width: "60px", height: "60px" }}
                           />
                           <div>
-                            <div className="fw-bold">{item.product.title}</div>
-                            {item.coupon && (
-                              <span className="badge bg-success">
-                                已套用：{item.coupon.title}
-                              </span>
-                            )}
+                            <div className="fw-bold text-dark">{item.product.title}</div>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <div className="input-group input-group-sm">
-                          <select
-                            className="form-select border-0 bg-light rounded-pill px-3"
-                            value={item.qty}
-                            onChange={(e) =>
-                              updateCartItem(item, Number(e.target.value))
-                            }
-                            disabled={isFullLoading}
-                          >
-                            {[...Array(20).keys()].map((i) => (
-                              <option value={i + 1} key={i + 1}>
-                                {i + 1}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        <select
+                          className="form-select border-0 bg-light rounded-pill px-3 py-1"
+                          value={item.qty}
+                          onChange={(e) => updateCartItem(item, Number(e.target.value))}
+                          disabled={itemLoadingMap[item.id]}
+                        >
+                          {[...Array(20).keys()].map((i) => (
+                            <option value={i + 1} key={i + 1}>
+                              {i + 1}
+                            </option>
+                          ))}
+                        </select>
                       </td>
-                      <td className="text-end text-muted">
+                      <td className="text-end text-muted small">
                         NT$ {item.product.price}
                       </td>
-                      <td className="text-end fw-bold">
+                      <td className="text-end fw-bold text-primary">
                         NT$ {Math.round(item.total)}
                       </td>
                       <td className="text-center">
@@ -207,10 +200,13 @@ const Cart = () => {
                           type="button"
                           className="btn btn-link text-danger p-1"
                           onClick={() => removeCartItem(item.id)}
-                          disabled={isFullLoading}
+                          disabled={itemLoadingMap[item.id]}
                         >
-                          <i className="bi bi-trash3"></i>
-                          <span className="small">刪除</span>
+                          {itemLoadingMap[item.id] ? (
+                            <span className="spinner-border spinner-border-sm" role="status"></span>
+                          ) : (
+                            <i className="bi bi-trash3"></i>
+                          )}
                         </button>
                       </td>
                     </tr>
@@ -221,166 +217,78 @@ const Cart = () => {
           </div>
 
           <div className="col-lg-4">
-            <div
-              className="card border-0 shadow-sm rounded-4 p-4 sticky-top"
-              style={{ top: "2rem" }}
-            >
+            <div className="card border-0 shadow-sm rounded-4 p-4 sticky-top" style={{ top: "2rem" }}>
               <h5 className="fw-bold mb-4">訂單摘要</h5>
-              <div className="d-flex justify-content-between mb-3">
-                <span className="text-muted">商品總計</span>
-                <span className="fw-medium">
-                  NT$ {Math.round(cartData.total)}
-                </span>
+              <div className="d-flex justify-content-between mb-3 text-muted">
+                <span>商品共 {cartData.carts.length} 項</span>
+                <span>NT$ {Math.round(cartData.total)}</span>
               </div>
               <hr />
               <div className="d-flex justify-content-between mb-4">
-                <span className="h5 fw-bold mb-0">總計</span>
-                <span className="h5 fw-bold mb-0 text-primary">
-                  NT$ {Math.round(cartData.final_total)}
-                </span>
+                <span className="h5 fw-bold">總計</span>
+                <span className="h5 fw-bold text-primary">NT$ {Math.round(cartData.final_total)}</span>
               </div>
 
-              {/* TODO: 這裡可以預留一個結帳表單的入口或是直接寫表單 */}
-              {/* 結帳表單 */}
-              <div className="mt-5">
-                <div className="d-flex align-items-center mb-4">
-                  <div
-                    className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
-                    style={{ width: "32px", height: "32px" }}
-                  >
-                    <span className="text-white fw-bold small">1</span>
-                  </div>
-                  <h4 className="fw-bold mb-0">收件人資訊</h4>
-                </div>
-
+              <div className="mt-4">
+                <h6 className="fw-bold mb-3 border-start border-primary border-4 ps-2">收件人資訊</h6>
                 <form onSubmit={handleSubmit(onSubmit)} className="row g-3">
-                  <div className="col-md-6 text-start">
-                    <label htmlFor="email" className="form-label small fw-bold">
-                      Email <span className="text-danger">*</span>
-                    </label>
+                  <div className="col-12">
                     <input
-                      id="email"
                       type="email"
-                      className={`form-control border-0 bg-light rounded-3 ${
-                        errors.email ? "is-invalid" : ""
-                      }`}
-                      placeholder="請輸入 Email"
+                      className={`form-control border-0 bg-light rounded-3 ${errors.email ? "is-invalid" : ""}`}
+                      placeholder="Email *"
                       {...register("email", {
-                        required: "Email 為必填",
-                        pattern: {
-                          value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                          message: "Email 格式不正確",
-                        },
+                        required: "必填",
+                        pattern: { value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: "格式不正確" }
                       })}
                     />
-                    {errors.email && (
-                      <div className="invalid-feedback">
-                        {errors.email.message}
-                      </div>
-                    )}
                   </div>
-
-                  <div className="col-md-6 text-start">
-                    <label htmlFor="name" className="form-label small fw-bold">
-                      收件人姓名 <span className="text-danger">*</span>
-                    </label>
+                  <div className="col-12">
                     <input
-                      id="name"
                       type="text"
-                      className={`form-control border-0 bg-light rounded-3 ${
-                        errors.name ? "is-invalid" : ""
-                      }`}
-                      placeholder="請輸入姓名"
-                      {...register("name", { required: "姓名為必填" })}
+                      className={`form-control border-0 bg-light rounded-3 ${errors.name ? "is-invalid" : ""}`}
+                      placeholder="姓名 *"
+                      {...register("name", { required: "必填" })}
                     />
-                    {errors.name && (
-                      <div className="invalid-feedback">
-                        {errors.name.message}
-                      </div>
-                    )}
                   </div>
-
-                  <div className="col-md-12 text-start">
-                    <label htmlFor="tel" className="form-label small fw-bold">
-                      收件人電話 <span className="text-danger">*</span>
-                    </label>
+                  <div className="col-12">
                     <input
-                      id="tel"
                       type="tel"
-                      className={`form-control border-0 bg-light rounded-3 ${
-                        errors.tel ? "is-invalid" : ""
-                      }`}
-                      placeholder="請輸入電話"
+                      className={`form-control border-0 bg-light rounded-3 ${errors.tel ? "is-invalid" : ""}`}
+                      placeholder="電話 *"
                       {...register("tel", {
-                        required: "電話為必填",
-                        minLength: { value: 8, message: "電話最少 8 碼" },
-                        pattern: {
-                          value: /^(09)[0-9]{8}$|^0[0-9]{1,2}[0-9]{6,8}$/,
-                          message: "請輸入有效的電話格式",
-                        },
+                        required: "必填",
+                        minLength: { value: 8, message: "最少 8 碼" },
+                        pattern: { value: /^(09)[0-9]{8}$|^0[0-9]{1,2}[0-9]{6,8}$/, message: "格式不正確" }
                       })}
                     />
-                    {errors.tel && (
-                      <div className="invalid-feedback">{errors.tel.message}</div>
-                    )}
                   </div>
-
-                  <div className="col-md-12 text-start">
-                    <label htmlFor="address" className="form-label small fw-bold">
-                      收件地地址 <span className="text-danger">*</span>
-                    </label>
+                  <div className="col-12">
                     <input
-                      id="address"
                       type="text"
-                      className={`form-control border-0 bg-light rounded-3 ${
-                        errors.address ? "is-invalid" : ""
-                      }`}
-                      placeholder="請輸入地址"
-                      {...register("address", { required: "地址為必填" })}
+                      className={`form-control border-0 bg-light rounded-3 ${errors.address ? "is-invalid" : ""}`}
+                      placeholder="地址 *"
+                      {...register("address", { required: "必填" })}
                     />
-                    {errors.address && (
-                      <div className="invalid-feedback">
-                        {errors.address.message}
-                      </div>
-                    )}
                   </div>
-
-                  <div className="col-md-12 text-start">
-                    <label htmlFor="message" className="form-label small fw-bold">
-                      留言
-                    </label>
+                  <div className="col-12">
                     <textarea
-                      id="message"
                       className="form-control border-0 bg-light rounded-3"
-                      rows="3"
-                      placeholder="有什麼想對我們說的嗎？"
+                      rows="2"
+                      placeholder="備註"
                       {...register("message")}
                     ></textarea>
                   </div>
-
                   <div className="col-12 mt-4">
                     <button
                       type="submit"
                       className="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center"
-                      disabled={isFullLoading || isSubmitting || cartData.carts.length === 0}
+                      disabled={isSubmitting || cartData.carts.length === 0}
                     >
-                      {isSubmitting || isFullLoading ? (
-                        <>
-                          <span
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                          ></span>
-                          處理中...
-                        </>
-                      ) : (
-                        "確認送出訂單"
-                      )}
+                      {isSubmitting ? (
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      ) : "確認送出訂單"}
                     </button>
-                    {cartData.carts.length === 0 && (
-                      <p className="text-danger small mt-2 mb-0 text-center">
-                        購物車內尚無品項，無法送出訂單
-                      </p>
-                    )}
                   </div>
                 </form>
               </div>
@@ -390,14 +298,9 @@ const Cart = () => {
       ) : (
         <div className="bg-light p-5 rounded-4 text-center border border-dashed">
           <p className="lead mb-4 text-muted">您的購物車目前是空的</p>
-          <a href="#/product" className="btn btn-primary rounded-pill px-5">
-            去商店逛逛
-          </a>
+          <a href="#/product" className="btn btn-primary rounded-pill px-5">去商店逛逛</a>
         </div>
       )}
-
-      {/* Loading Overlay */}
-      <FullPageLoading isLoading={isFullLoading} />
     </div>
   );
 };

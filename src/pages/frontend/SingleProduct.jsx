@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import Skeleton from "../../components/common/Skeleton";
+import Swal from "sweetalert2";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -24,10 +25,23 @@ const SingleProduct = () => {
           qty: Number(qty),
         },
       });
-      // 可以考慮跳通知或導向購物車
+      Swal.fire({
+        title: "已加入購物車",
+        text: "商品已成功加入",
+        icon: "success",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
     } catch (error) {
       console.error("加入購物車失敗", error);
-      alert("加入購物車失敗");
+      Swal.fire({
+        title: "加入失敗",
+        text: error.response?.data?.message || "請稍後再試",
+        icon: "error",
+      });
     } finally {
       setCartLoading(false);
     }
