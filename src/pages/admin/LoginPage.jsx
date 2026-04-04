@@ -25,7 +25,7 @@ function LoginPage({ isAuth, setIsAuth, getData }) {
 
   useEffect(() => {
     if (isAuth) {
-      navigate("/admin");
+      navigate("/admin/product");
     }
   }, [isAuth, navigate]);
 
@@ -38,7 +38,7 @@ function LoginPage({ isAuth, setIsAuth, getData }) {
       axios.defaults.headers.common["Authorization"] = token;
 
       setIsAuth(true);
-      navigate("/admin");
+      navigate("/admin/product");
 
       if (getData) getData();
 

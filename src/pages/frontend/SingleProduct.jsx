@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import Skeleton from "../../components/common/Skeleton";
 import Swal from "sweetalert2";
+import { Oval } from "react-loader-spinner";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -136,13 +137,14 @@ const SingleProduct = () => {
                 disabled={cartLoading}
               >
                 {cartLoading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                    ></span>
-                    處理中...
-                  </>
+                  <Oval
+                    height="24"
+                    width="24"
+                    color="#fff"
+                    secondaryColor="#fff"
+                    strokeWidth={4}
+                    strokeWidthSecondary={4}
+                  />
                 ) : (
                   "加入購物車"
                 )}

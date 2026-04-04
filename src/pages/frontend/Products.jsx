@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ProductListSkeleton } from "../../components/common/Skeleton";
 import { ShoppingCart } from "lucide-react";
 import Swal from "sweetalert2";
+import { Oval } from "react-loader-spinner";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -115,10 +116,15 @@ const Products = () => {
                       title="加入購物車"
                     >
                       {cartLoading[product.id] ? (
-                        <span
-                          className="spinner-border spinner-border-sm"
-                          role="status"
-                        ></span>
+                        <Oval
+                          height="20"
+                          width="20"
+                          color="#fff"
+                          secondaryColor="#fff"
+                          ariaLabel="oval-loading"
+                          strokeWidth={4}
+                          strokeWidthSecondary={4}
+                        />
                       ) : (
                         <ShoppingCart size={22} />
                       )}

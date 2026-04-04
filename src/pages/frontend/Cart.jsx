@@ -3,6 +3,8 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { CartSkeleton } from "../../components/common/Skeleton";
+import { Trash2, Plus, Minus } from "lucide-react";
+import { TailSpin } from "react-loader-spinner";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -48,12 +50,18 @@ const Cart = () => {
   };
 
   const updateCartItem = async (item, qty) => {
+    // 若數量減至 0，則直接移除品項
+    if (qty <= 0) {
+      removeCartItem(item.id);
+      return;
+    }
+
     setItemLoadingMap((prev) => ({ ...prev, [item.id]: true }));
     try {
       await axios.put(`${API_BASE}/api/${API_PATH}/cart/${item.id}`, {
         data: {
           product_id: item.product_id,
-          qty,
+          qty: Number(qty),
         },
       });
       getCart();
@@ -70,6 +78,7 @@ const Cart = () => {
     try {
       await axios.delete(`${API_BASE}/api/${API_PATH}/cart/${id}`);
       getCart();
+      Swal.fire({ icon: "success", title: "已移除品項", toast: true, position: "top-end", timer: 1500, showConfirmButton: false });
     } catch (error) {
       console.error(error);
       Swal.fire({ icon: "error", title: "刪除品項失敗" });
@@ -97,7 +106,7 @@ const Cart = () => {
     const orderData = {
       data: {
         user,
-        message,
+        message: message || "",
       },
     };
 
@@ -133,7 +142,7 @@ const Cart = () => {
         <h1 className="mb-0">購物車</h1>
         {cartData.carts.length > 0 && (
           <button
-            className="btn btn-outline-danger btn-sm"
+            className="btn btn-outline-danger btn-sm rounded-pill px-3"
             type="button"
             onClick={removeAllCart}
             disabled={isPageLoading || Object.values(itemLoadingMap).some(v => v)}
@@ -153,7 +162,7 @@ const Cart = () => {
                 <thead className="bg-light">
                   <tr>
                     <th>品項</th>
-                    <th style={{ width: "120px" }}>數量</th>
+                    <th style={{ width: "160px" }}>數量</th>
                     <th className="text-end">單價</th>
                     <th className="text-end">小計</th>
                     <th className="text-center">操作</th>
@@ -176,18 +185,31 @@ const Cart = () => {
                         </div>
                       </td>
                       <td>
-                        <select
-                          className="form-select border-0 bg-light rounded-pill px-3 py-1"
-                          value={item.qty}
-                          onChange={(e) => updateCartItem(item, Number(e.target.value))}
-                          disabled={itemLoadingMap[item.id]}
-                        >
-                          {[...Array(20).keys()].map((i) => (
-                            <option value={i + 1} key={i + 1}>
-                              {i + 1}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="input-group input-group-sm">
+                          <button 
+                            className="btn btn-outline-primary border-0 bg-light" 
+                            type="button"
+                            onClick={() => updateCartItem(item, item.qty - 1)}
+                            disabled={itemLoadingMap[item.id] || item.qty <= 0}
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <input 
+                            type="number" 
+                            className="form-control border-0 bg-light text-center" 
+                            value={item.qty}
+                            onChange={(e) => updateCartItem(item, e.target.value)}
+                            disabled={itemLoadingMap[item.id]}
+                          />
+                          <button 
+                            className="btn btn-outline-primary border-0 bg-light" 
+                            type="button"
+                            onClick={() => updateCartItem(item, item.qty + 1)}
+                            disabled={itemLoadingMap[item.id]}
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
                       </td>
                       <td className="text-end text-muted small">
                         NT$ {item.product.price}
@@ -203,9 +225,9 @@ const Cart = () => {
                           disabled={itemLoadingMap[item.id]}
                         >
                           {itemLoadingMap[item.id] ? (
-                            <span className="spinner-border spinner-border-sm" role="status"></span>
+                            <div className="spinner-border spinner-border-sm" role="status"></div>
                           ) : (
-                            <i className="bi bi-trash3"></i>
+                            <Trash2 size={20} />
                           )}
                         </button>
                       </td>
@@ -233,49 +255,58 @@ const Cart = () => {
                 <h6 className="fw-bold mb-3 border-start border-primary border-4 ps-2">收件人資訊</h6>
                 <form onSubmit={handleSubmit(onSubmit)} className="row g-3">
                   <div className="col-12">
+                    <label className="form-label small text-muted">Email *</label>
                     <input
                       type="email"
                       className={`form-control border-0 bg-light rounded-3 ${errors.email ? "is-invalid" : ""}`}
-                      placeholder="Email *"
+                      placeholder="請輸入 Email"
                       {...register("email", {
                         required: "必填",
                         pattern: { value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: "格式不正確" }
                       })}
                     />
+                    {errors.email && <div className="invalid-feedback">{errors.email.message}</div>}
                   </div>
                   <div className="col-12">
+                    <label className="form-label small text-muted">收件人姓名 *</label>
                     <input
                       type="text"
                       className={`form-control border-0 bg-light rounded-3 ${errors.name ? "is-invalid" : ""}`}
-                      placeholder="姓名 *"
+                      placeholder="請輸入姓名"
                       {...register("name", { required: "必填" })}
                     />
+                    {errors.name && <div className="invalid-feedback">{errors.name.message}</div>}
                   </div>
                   <div className="col-12">
+                    <label className="form-label small text-muted">收件人電話 *</label>
                     <input
                       type="tel"
                       className={`form-control border-0 bg-light rounded-3 ${errors.tel ? "is-invalid" : ""}`}
-                      placeholder="電話 *"
+                      placeholder="請輸入電話"
                       {...register("tel", {
                         required: "必填",
                         minLength: { value: 8, message: "最少 8 碼" },
                         pattern: { value: /^(09)[0-9]{8}$|^0[0-9]{1,2}[0-9]{6,8}$/, message: "格式不正確" }
                       })}
                     />
+                    {errors.tel && <div className="invalid-feedback">{errors.tel.message}</div>}
                   </div>
                   <div className="col-12">
+                    <label className="form-label small text-muted">收件人地址 *</label>
                     <input
                       type="text"
                       className={`form-control border-0 bg-light rounded-3 ${errors.address ? "is-invalid" : ""}`}
-                      placeholder="地址 *"
+                      placeholder="請輸入地址"
                       {...register("address", { required: "必填" })}
                     />
+                    {errors.address && <div className="invalid-feedback">{errors.address.message}</div>}
                   </div>
                   <div className="col-12">
+                    <label className="form-label small text-muted">備註</label>
                     <textarea
                       className="form-control border-0 bg-light rounded-3"
                       rows="2"
-                      placeholder="備註"
+                      placeholder="有什麼想對我們說的嗎？"
                       {...register("message")}
                     ></textarea>
                   </div>
@@ -286,7 +317,14 @@ const Cart = () => {
                       disabled={isSubmitting || cartData.carts.length === 0}
                     >
                       {isSubmitting ? (
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <TailSpin
+                          height="20"
+                          width="20"
+                          color="#fff"
+                          ariaLabel="tail-spin-loading"
+                          radius="1"
+                          visible={true}
+                        />
                       ) : "確認送出訂單"}
                     </button>
                   </div>

@@ -7,10 +7,18 @@ import Cart from "./pages/frontend/Cart";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/admin/LoginPage";
 import AdminLayout from "./layout/AdminLayout";
+import AdminProducts from "./pages/admin/AdminProducts";
 
-// 簡單的路由保護組件
+import PropTypes from "prop-types";
+
+// 簡單的路由保護組件 - 抽離外部以符合 Fast Refresh 規範
 const ProtectedRoute = ({ isAuth, children }) => {
   return isAuth ? children : <Navigate to="/login" replace />;
+};
+
+ProtectedRoute.propTypes = {
+  isAuth: PropTypes.bool.isRequired,
+  children: PropTypes.node.isRequired,
 };
 
 export const createRouter = (isAuth, setIsAuth) => createHashRouter([
@@ -47,6 +55,16 @@ export const createRouter = (isAuth, setIsAuth) => createHashRouter([
         <AdminLayout setIsAuth={setIsAuth} />
       </ProtectedRoute>
     ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to="product" replace />,
+      },
+      {
+        path: "product",
+        element: <AdminProducts />,
+      },
+    ],
   },
   {
     path: "*",

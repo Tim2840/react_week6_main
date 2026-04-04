@@ -69,7 +69,7 @@ export const CartSummarySkeleton = () => {
   );
 };
 
-// 完整的購物車頁面加載視圖 (由零件組成)
+// 完整的購物車頁面加載視圖
 export const CartSkeleton = ({ count = 3 }) => {
   return (
     <div className="row">
