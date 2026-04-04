@@ -1,11 +1,9 @@
-@use "./variables";
-
 /* 後台管理樣式 */
 .admin-layout {
   background-color: #f5f5f5;
 
   .navbar-dark {
-    background-color: variables.$backend-navbar !important;
+    background-color: $backend-navbar !important;
   }
 
   .navbar-brand {
@@ -20,18 +18,18 @@
 
   // 後台表單控制項 (覆蓋預設粉色風格)
   .form-control:focus {
-    border-color: variables.$backend-main;
-    box-shadow: 0 0 0 0.25rem rgba(variables.$backend-main, 0.25);
+    border-color: $backend-main;
+    box-shadow: 0 0 0 0.25rem rgba($backend-main, 0.25);
   }
 
   .form-check-input:focus {
-    border-color: variables.$backend-main;
-    box-shadow: 0 0 0 0.25rem rgba(variables.$backend-main, 0.25);
+    border-color: $backend-main;
+    box-shadow: 0 0 0 0.25rem rgba($backend-main, 0.25);
   }
 
   .form-check-input:checked {
-    background-color: variables.$backend-main;
-    border-color: variables.$backend-main;
+    background-color: $backend-main;
+    border-color: $backend-main;
   }
 }
 
@@ -112,15 +110,15 @@
 }
 
 .btn-danger {
-  background-color: variables.$backend-danger;
-  border-color: variables.$backend-danger;
+  background-color: $backend-danger;
+  border-color: $backend-danger;
   color: #fff;
   box-shadow: none;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: variables.$backend-danger-hover;
-    border-color: variables.$backend-danger-hover;
+    background-color: $backend-danger-hover;
+    border-color: $backend-danger-hover;
     transform: translateY(-2px);
   }
 }
@@ -138,28 +136,28 @@
 }
 
 .btn-secondary {
-  background-color: variables.$backend-secondary;
-  border-color: variables.$backend-secondary;
+  background-color: $backend-secondary;
+  border-color: $backend-secondary;
   color: #fff;
   box-shadow: none;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: variables.$backend-secondary-hover;
-    border-color: variables.$backend-secondary-hover;
+    background-color: $backend-secondary-hover;
+    border-color: $backend-secondary-hover;
     transform: translateY(-2px);
   }
 }
 
 .btn-action {
-  background-color: variables.$backend-main;
+  background-color: $backend-main;
   color: #fff;
   border: none;
   box-shadow: none;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: variables.$backend-main-hover;
+    background-color: $backend-main-hover;
     color: #fff;
     transform: translateY(-2px);
     box-shadow: none;
@@ -181,7 +179,7 @@
 }
 
 .modal-header {
-  background-color: variables.$backend-main-hover;
+  background-color: $backend-main-hover;
   color: #fff;
 
   .btn-close {
@@ -221,27 +219,27 @@
   .page-link {
     border-radius: 6px; // 統一圓角
     border: 1px solid #dee2e6;
-    color: variables.$backend-main;
+    color: $backend-main;
     min-width: 32px; // 讓數字按鈕寬度一致，視覺更整齊
     text-align: center;
     box-shadow: none !important;
     transition: all 0.2s ease;
 
     &:hover {
-      background-color: rgba(variables.$backend-main, 0.1);
-      color: variables.$backend-main-hover;
-      border-color: variables.$backend-main;
+      background-color: rgba($backend-main, 0.1);
+      color: $backend-main-hover;
+      border-color: $backend-main;
     }
   }
 
   .page-item.active .page-link {
-    background-color: variables.$backend-main;
-    border-color: variables.$backend-main;
+    background-color: $backend-main;
+    border-color: $backend-main;
     color: #fff;
 
     &:hover {
-      background-color: variables.$backend-main-hover;
-      border-color: variables.$backend-main-hover;
+      background-color: $backend-main-hover;
+      border-color: $backend-main-hover;
     }
   }
 
@@ -251,3 +249,4 @@
     border-color: #dee2e6;
   }
 }
+

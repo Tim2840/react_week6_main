@@ -1,7 +1,33 @@
-@use "./variables";
-@use "./base";
-@use "./forms";
-@use "./login";
-@use "./admin";
-@use "./skeleton";
-@use "./products";
+// 1. 先引入自定義變數 (確保變數能被接下來的 Bootstrap 讀取)
+@import "./variables";
+
+// 2. 引入 Bootstrap SCSS 源碼
+@import "bootstrap/scss/bootstrap";
+
+// 3. 引入專案自定義模組 (使用 @import 保持編譯順序一致)
+@import "./base";
+@import "./forms";
+@import "./login";
+@import "./admin";
+@import "./skeleton";
+@import "./products";
+
+// 4. 全域修正：隱藏數字輸入框預設控制箭頭
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+// 5. 數量控制組 Hover 修復 (針對產品列表與購物車)
+.input-group {
+  .btn-outline-primary:hover {
+    color: white !important; // 確保圖示在粉紅背景下變白
+    background-color: darken(#ff758c, 10%) !important;
+  }
+}
+

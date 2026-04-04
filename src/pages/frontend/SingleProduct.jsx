@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import Skeleton from "../../components/common/Skeleton";
 import Swal from "sweetalert2";
+import { Plus, Minus } from "lucide-react";
 import { Oval } from "react-loader-spinner";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
@@ -114,25 +115,33 @@ const SingleProduct = () => {
             </div>
 
             <div className="d-flex align-items-center gap-3 mb-4">
-              <div
-                className="input-group"
-                style={{ width: "150px" }}
-              >
-                <select
-                  className="form-select border-0 bg-light rounded-pill px-4"
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
+              <div className="input-group" style={{ width: "160px" }}>
+                <button 
+                  className="btn btn-outline-primary border-0 bg-light" 
+                  type="button"
+                  onClick={() => setQty(prev => Math.max(1, prev - 1))}
                   disabled={cartLoading}
                 >
-                  {[...Array(10).keys()].map((i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {i + 1}
-                    </option>
-                  ))}
-                </select>
+                  <Minus size={16} />
+                </button>
+                <input 
+                  type="number" 
+                  className="form-control border-0 bg-light text-center fw-bold" 
+                  value={qty}
+                  onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+                  disabled={cartLoading}
+                />
+                <button 
+                  className="btn btn-outline-primary border-0 bg-light" 
+                  type="button"
+                  onClick={() => setQty(prev => prev + 1)}
+                  disabled={cartLoading}
+                >
+                  <Plus size={16} />
+                </button>
               </div>
               <button
-                className="btn btn-primary btn-lg rounded-pill px-5 flex-grow-1 d-flex align-items-center justify-content-center"
+                className="btn btn-primary btn-lg rounded-pill px-5 flex-grow-1 d-flex align-items-center justify-content-center shadow-sm"
                 onClick={addToCart}
                 disabled={cartLoading}
               >

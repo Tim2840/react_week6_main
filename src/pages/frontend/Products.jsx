@@ -12,7 +12,6 @@ const API_PATH = import.meta.env.VITE_API_PATH;
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [cartLoading, setCartLoading] = useState({});
 
   const addToCart = async (productId) => {
@@ -73,67 +72,69 @@ const Products = () => {
         {isLoading ? (
           <ProductListSkeleton />
         ) : (
-          products.map((product) => (
-            <div className="col" key={product.id}>
-              <div className="product-card card h-100 shadow-sm border-0">
-                <div className="card-img-container">
-                  <Link to={`/product/${product.id}`}>
-                    <img
-                      src={product.imageUrl}
-                      className="card-img-top"
-                      alt={product.title}
-                    />
-                  </Link>
-                  <span className="category-badge">{product.category}</span>
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="btn-overlay text-decoration-none text-center"
-                  >
-                    查看細節
-                  </Link>
-                </div>
-                <div className="card-body">
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="text-decoration-none"
-                  >
-                    <h5 className="product-title" title={product.title}>
-                      {product.title}
-                    </h5>
-                  </Link>
-                  <p className="product-description">{product.description}</p>
-                  <div className="product-footer">
-                    <div className="price-tag">
-                      <span className="currency">NT$</span>
-                      <span className="amount">
-                        {product.price.toLocaleString()}
-                      </span>
-                    </div>
-                    <button
-                      className="btn-add-cart"
-                      onClick={() => addToCart(product.id)}
-                      disabled={cartLoading[product.id]}
-                      title="加入購物車"
+          products.map((product) => {
+            return (
+              <div className="col" key={product.id}>
+                <div className="product-card card h-100 shadow-sm border-0">
+                  <div className="card-img-container">
+                    <Link to={`/product/${product.id}`}>
+                      <img
+                        src={product.imageUrl}
+                        className="card-img-top"
+                        alt={product.title}
+                      />
+                    </Link>
+                    <span className="category-badge">{product.category}</span>
+                    <Link
+                      to={`/product/${product.id}`}
+                      className="btn-overlay text-decoration-none text-center"
                     >
-                      {cartLoading[product.id] ? (
-                        <Oval
-                          height="20"
-                          width="20"
-                          color="#fff"
-                          secondaryColor="#fff"
-                          ariaLabel="oval-loading"
-                          strokeWidth={4}
-                          strokeWidthSecondary={4}
-                        />
-                      ) : (
-                        <ShoppingCart size={22} />
-                      )}
-                    </button>
+                      查看細節
+                    </Link>
+                  </div>
+                  <div className="card-body">
+                    <Link
+                      to={`/product/${product.id}`}
+                      className="text-decoration-none"
+                    >
+                      <h5 className="product-title" title={product.title}>
+                        {product.title}
+                      </h5>
+                    </Link>
+                    <p className="product-description">{product.description}</p>
+                    <div className="product-footer">
+                      <div className="price-tag">
+                        <span className="currency">NT$</span>
+                        <span className="amount">
+                          {product.price.toLocaleString()}
+                        </span>
+                      </div>
+                      <button
+                        className="btn-add-cart"
+                        onClick={() => addToCart(product.id)}
+                        disabled={cartLoading[product.id]}
+                        title="加入購物車"
+                      >
+                        {cartLoading[product.id] ? (
+                          <Oval
+                            height="20"
+                            width="20"
+                            color="#fff"
+                            secondaryColor="#fff"
+                            ariaLabel="oval-loading"
+                            strokeWidth={4}
+                            strokeWidthSecondary={4}
+                          />
+                        ) : (
+                          <ShoppingCart size={22} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -141,3 +142,4 @@ const Products = () => {
 };
 
 export default Products;
+
