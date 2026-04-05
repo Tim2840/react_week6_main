@@ -239,7 +239,7 @@ const Cart = () => {
           </div>
 
           <div className="col-lg-4">
-            <div className="card border-0 shadow-sm rounded-4 p-4 sticky-top" style={{ top: "84px" }}>
+            <div className="card border-0 shadow-sm rounded-4 p-4 cart-sticky-summary">
               <h5 className="fw-bold mb-4">訂單摘要</h5>
               <div className="d-flex justify-content-between mb-3 text-muted">
                 <span>商品共 {cartData.carts.length} 項</span>

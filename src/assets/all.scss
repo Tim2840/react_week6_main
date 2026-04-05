@@ -23,6 +23,12 @@ input[type=number] {
   appearance: textfield;
 }
 
+.cart-sticky-summary {
+  position: sticky !important;
+  top: 120px !important;
+  z-index: 10;
+}
+
 // 5. 數量控制組 Hover 修復 (針對產品列表與購物車)
 .input-group {
   .btn-outline-primary:hover {
@@ -30,4 +36,3 @@ input[type=number] {
     background-color: darken(#ff758c, 10%) !important;
   }
 }
-
