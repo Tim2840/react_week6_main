@@ -89,9 +89,22 @@ const Cart = () => {
   };
 
   const removeAllCart = async () => {
+    const result = await Swal.fire({
+      title: "確定要清空購物車嗎？",
+      text: "此操作無法復原！",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "是的，清空！",
+      cancelButtonText: "取消"
+    });
+
+    if (!result.isConfirmed) return;
+
     setIsPageLoading(true);
     try {
-      await axios.delete(`${API_BASE}/api/${API_PATH}/cart/all`);
+      await axios.delete(`${API_BASE}/api/${API_PATH}/carts`);
       getCart();
       Swal.fire({ icon: "success", title: "已清空購物車", toast: true, position: "top-end", timer: 1500, showConfirmButton: false });
     } catch (error) {
