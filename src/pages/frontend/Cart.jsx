@@ -29,7 +29,8 @@ const Cart = () => {
       address: "",
       message: "",
     },
-    mode: "onTouched",
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 
   const getCart = async () => {
