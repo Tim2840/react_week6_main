@@ -110,8 +110,15 @@ const SingleProduct = () => {
               </span>
             </div>
             <p className="text-muted mb-4 lead">{product.content}</p>
-            <div className="h3 text-primary mb-5 fw-bold">
-              NT$ {product.price}
+            <div className="d-flex align-items-end mb-5">
+              {product.origin_price && (
+                <del className="text-secondary opacity-75 fs-5 me-3 pb-1">
+                  NT$ {product.origin_price.toLocaleString()}
+                </del>
+              )}
+              <div className="h3 text-primary mb-0 fw-bold">
+                NT$ {product.price?.toLocaleString()}
+              </div>
             </div>
 
             <div className="d-flex align-items-center gap-3 mb-4">
