@@ -1,5 +1,6 @@
 import { RouterProvider } from "react-router-dom";
 import { createRouter } from "./router";
+import ToastMessage from "./components/common/ToastMessage";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -35,7 +36,12 @@ function App() {
   // 移除全域 Loading Spinner，改以非阻塞方式處理驗證 state，
   // 讓前端頁面的 Skeleton 能在第一時間呈現。
   const router = createRouter(isAuth, setIsAuth);
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastMessage />
+    </>
+  );
 }
 
 export default App;

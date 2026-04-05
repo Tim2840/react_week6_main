@@ -4,6 +4,8 @@ import Swal from "sweetalert2";
 import { Plus } from "lucide-react";
 import ProductList from "../../components/admin/ProductList";
 import ProductModal from "../../components/admin/ProductModal";
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../store/slices/messageSlice";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -13,6 +15,7 @@ function AdminProducts() {
   const [pageInfo, setPageInfo] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const fetchProducts = async (page = 1) => {
     try {
@@ -23,11 +26,13 @@ function AdminProducts() {
       setProducts(response.data.products);
       setPageInfo(response.data.pagination);
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "取得商品失敗",
-        text: `請重新整理頁面!${error}`,
-      });
+      dispatch(
+        addMessage({
+          type: "danger",
+          title: "取得商品失敗",
+          text: `請重新整理頁面! ${error.message || ""}`,
+        }),
+      );
     } finally {
       setLoading(false);
     }
@@ -35,6 +40,7 @@ function AdminProducts() {
 
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePageChange = (e, page) => {
@@ -76,15 +82,23 @@ function AdminProducts() {
         await axios.delete(
           `${API_BASE}/api/${API_PATH}/admin/product/${targetId}`,
         );
+        dispatch(
+          addMessage({
+            type: "success",
+            title: "刪除成功",
+          }),
+        );
         fetchProducts();
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || "操作失敗";
-      Swal.fire({
-        icon: "error",
-        title: "刪除失敗",
-        text: `請稍後重試!${errorMsg}`,
-      });
+      dispatch(
+        addMessage({
+          type: "danger",
+          title: "刪除失敗",
+          text: `請稍後重試! ${errorMsg}`,
+        }),
+      );
     }
   };
 

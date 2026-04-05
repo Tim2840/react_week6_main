@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import axios from "axios";
-import Swal from "sweetalert2";
 import PropTypes from "prop-types";
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../store/slices/messageSlice";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -10,6 +11,7 @@ const API_PATH = import.meta.env.VITE_API_PATH;
 function ProductModal({ tempProduct, setTempProduct, getData, isOpen }) {
   const fileInputRef = useRef(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const dispatch = useDispatch();
 
   const handleModalInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -62,12 +64,12 @@ function ProductModal({ tempProduct, setTempProduct, getData, isOpen }) {
       const formatProductData = { data: productData };
       await axios[method](url, formatProductData);
 
-      Swal.fire({
-        icon: "success",
-        title: tempProduct.id ? "更新成功" : "新增成功",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      dispatch(
+        addMessage({
+          type: "success",
+          title: tempProduct.id ? "更新成功" : "新增成功",
+        }),
+      );
 
       getData(); // Refresh list
       setTempProduct(null); // Close modal
@@ -75,11 +77,14 @@ function ProductModal({ tempProduct, setTempProduct, getData, isOpen }) {
       const errorMsg = Array.isArray(error.response?.data?.message)
         ? error.response.data.message.join("、")
         : error.response?.data?.message || "操作失敗";
-      Swal.fire({
-        icon: "error",
-        title: tempProduct.id ? "更新失敗" : "新增失敗",
-        text: `請檢查欄位是否正確: ${errorMsg}`,
-      });
+      
+      dispatch(
+        addMessage({
+          type: "danger",
+          title: tempProduct.id ? "更新失敗" : "新增失敗",
+          text: `請檢查欄位是否正確: ${errorMsg}`,
+        }),
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -103,18 +108,20 @@ function ProductModal({ tempProduct, setTempProduct, getData, isOpen }) {
         ...prev,
         imageUrl: imageUrl,
       }));
-      Swal.fire({
-        icon: "success",
-        title: "圖片上傳成功",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      dispatch(
+        addMessage({
+          type: "success",
+          title: "圖片上傳成功",
+        }),
+      );
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "圖片上傳失敗",
-        text: error.response?.data?.message || "發生錯誤",
-      });
+      dispatch(
+        addMessage({
+          type: "danger",
+          title: "圖片上傳失敗",
+          text: error.response?.data?.message || "發生錯誤",
+        }),
+      );
     } finally {
       setIsProcessing(false);
       e.target.value = "";
