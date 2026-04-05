@@ -104,11 +104,11 @@ const Products = () => {
                     <p className="product-description">{product.description}</p>
                     <div className="product-footer">
                       <div className="price-tag d-flex flex-column align-items-start justify-content-center">
-                        {product.origin_price && (
+                        {product.origin_price ? (
                           <del className="text-secondary opacity-75 mb-1" style={{ fontSize: '0.8rem', lineHeight: 1 }}>
                             NT$ {product.origin_price.toLocaleString()}
                           </del>
-                        )}
+                        ) : null}
                         <div style={{ lineHeight: 1 }}>
                           <span className="currency">NT$</span>
                           <span className="amount">

@@ -111,11 +111,11 @@ const SingleProduct = () => {
             </div>
             <p className="text-muted mb-4 lead">{product.content}</p>
             <div className="d-flex align-items-end mb-5">
-              {product.origin_price && (
+              {product.origin_price ? (
                 <del className="text-secondary opacity-75 fs-5 me-3 pb-1">
                   NT$ {product.origin_price.toLocaleString()}
                 </del>
-              )}
+              ) : null}
               <div className="h3 text-primary mb-0 fw-bold">
                 NT$ {product.price?.toLocaleString()}
               </div>
